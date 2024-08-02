@@ -38,7 +38,7 @@ local app = {}
 local TTY = "/dev/ttyACM0"
 local CONFIG0 = "/etc/config.mesh/gpsd"
 local CONFIG1 = "/etc/config/gpsd"
-local MAXDIFF = 0.0001
+local CHANGEMARGIN = 0.0001
 
 function app.whereandwhen()
     if not nixio.fs.stat(TTY) then
@@ -72,6 +72,7 @@ function app.whereandwhen()
                 -- Set time and date
                 local time = j.time:gsub("T", " "):gsub(".000Z", "")
                 os.execute("/bin/date -u -s '" .. time .. "' > /dev/nul 2>&1")
+                write_all("/tmp/timesync", "gps")
 
                 -- Set location if significantly changed
                 local lat = j.lat
@@ -79,7 +80,7 @@ function app.whereandwhen()
                 local c = uci.cursor()
                 local clat = tonumber(c:get("aredn", "@location[0]", "lat") or 0)
                 local clon = tonumber(c:get("aredn", "@location[0]", "lon") or 0)
-                if math.abs(clat - lat) > MAXDIFF or math.abs(clon - lon) > MAXDIFF then
+                if math.abs(clat - lat) > CHANGEMARGIN or math.abs(clon - lon) > CHANGEMARGIN then
                     -- Calculate gridsquare from lat/lon
                     local alat = lat + 90
                     local flat = 65 + math.floor(alat / 10)
@@ -97,11 +98,13 @@ function app.whereandwhen()
                     c:set("aredn", "@location[0]", "lat", lat)
                     c:set("aredn", "@location[0]", "lon", lon)
                     c:set("aredn", "@location[0]", "gridsquare", gridsquare)
+                    c:set("aredn", "@location[0]", "source", "gps")
                     c:commit("aredn")
                     local cm = uci.cursor("/etc/config.mesh")
                     cm:set("aredn", "@location[0]", "lat", lat)
                     cm:set("aredn", "@location[0]", "lon", lon)
                     cm:set("aredn", "@location[0]", "gridsquare", gridsquare)
+                    cm:set("aredn", "@location[0]", "source", "gps")
                     cm:commit("aredn")
                 end
                 break
