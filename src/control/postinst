@@ -1,0 +1,3 @@
+#!/bin/sh
+/etc/init.d/manager restart
+exit 0

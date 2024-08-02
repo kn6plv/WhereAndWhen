@@ -1,0 +1,10 @@
+Package: whenandwhen
+Version: 0.01
+Depends: gpsd gpsd-clients kmod-usb-acm kmod-usb-core kmod-usb-ehci kmod-usb-xhci-hcd kmod-usb2 kmod-usb3 terminfo libncurses6 libusb-1.0-0
+Provides:
+Source: package/whereandwhen
+Section: util
+Priority: optional
+Maintainer: Tim Wilkinson (KN6PLV)
+Architecture: all
+Description: Use GPS to set node location and time
