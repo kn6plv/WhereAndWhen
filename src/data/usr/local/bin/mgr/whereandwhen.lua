@@ -34,14 +34,24 @@
 --]]
 
 local app = {}
-
-local TTY = "/dev/ttyACM0"
+local TTYS = {
+    "/dev/ttyACM0",
+    "/dev/ttyUSB0"
+}
 local CONFIG0 = "/etc/config.mesh/gpsd"
 local CONFIG1 = "/etc/config/gpsd"
 local CHANGEMARGIN = 0.0001
 
 function app.whereandwhen()
-    if not nixio.fs.stat(TTY) then
+    local tty = nil
+    for _, t in ipairs(TTYS)
+    do
+        if nixio.fs.stat(t) then
+            tty = t
+            break
+        end
+    end
+    if not tty then
         exit_app()
         return
     end
@@ -51,7 +61,7 @@ function app.whereandwhen()
     f:write(
 [[config gpsd 'core'
     option enabled '1'
-    option device ']] .. TTY .. [['
+    option device ']] .. tty .. [['
     option port '2947'
     option listen_globally '1'
 ]])
@@ -64,9 +74,10 @@ function app.whereandwhen()
 
     while true
     do
+        local done = false
         for line in io.popen("/usr/bin/gpspipe -w -n 10"):lines()
         do
-            if line:match("TPV") then
+            if not done and line:match("TPV") then
                 local j = luci.jsonc.parse(line)
 
                 -- Set time and date
@@ -107,7 +118,7 @@ function app.whereandwhen()
                     cm:set("aredn", "@location[0]", "source", "gps")
                     cm:commit("aredn")
                 end
-                break
+                done = true
             end
         end
 
