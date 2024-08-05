@@ -42,40 +42,68 @@ local CONFIG0 = "/etc/config.mesh/gpsd"
 local CONFIG1 = "/etc/config/gpsd"
 local CHANGEMARGIN = 0.0001
 
-function app.whereandwhen()
-    local tty = nil
-    for _, t in ipairs(TTYS)
+local function find_gps()
+    for _, tty in ipairs(TTYS)
     do
-        if nixio.fs.stat(t) then
-            tty = t
-            break
+        if nixio.fs.stat(tty) then
+            return tty
         end
     end
-    if not tty then
-        exit_app()
-        return
+    local l = io.open("/tmp/lqm.info")
+    if l then
+        local lqm = luci.jsonc.parse(l:read("*a"))
+        l:close()
+        for _, tracker in pairs(lqm.trackers)
+        do
+            if tracker.type == "DtD" and tracker.ip then
+                local s = nixio.socket("inet", "stream")
+                s:setopt("socket", "sndtimeo", 1)
+                local r = s:connect(tracker.ip, 2947)
+                s:close()
+                if r then
+                    return tracker.ip .. ":2947"
+                end
+            end
+        end
+    end
+end
+
+function app.whereandwhen()
+
+    wait_for_ticks(60)
+
+    local tty
+    while true
+    do
+        tty = find_gps()
+        if tty then
+            break
+        end
+        wait_for_ticks(600) -- 10 minutes
     end
 
-    -- Create the GPSD config
-    local f = io.open(CONFIG0, "w")
-    f:write(
+    -- Create the GPSD daemon if device is local,
+    -- otherwise we get the GPS info from another node on our local network
+    if tty:match("^/dev/") then
+        local f = io.open(CONFIG0, "w")
+        f:write(
 [[config gpsd 'core'
     option enabled '1'
     option device ']] .. tty .. [['
     option port '2947'
     option listen_globally '1'
 ]])
-    f:close()
-    filecopy(CONFIG0, CONFIG1, true)
-
-    os.execute("/etc/init.d/gpsd restart")
-
-    wait_for_ticks(60)
+        f:close()
+        filecopy(CONFIG0, CONFIG1, true)
+        os.execute("nft insert rule ip fw4 input_dtdlink tcp dport 2947 accept comment \"gpsd\" 2> /dev/null")
+        os.execute("/etc/init.d/gpsd restart")
+        tty = "127.0.0.1:2947"
+    end
 
     while true
     do
         local done = false
-        for line in io.popen("/usr/bin/gpspipe -w -n 10"):lines()
+        for line in io.popen("/usr/bin/gpspipe -w -n 10 " .. tty):lines()
         do
             if not done and line:match("TPV") then
                 local j = luci.jsonc.parse(line)
@@ -122,7 +150,7 @@ function app.whereandwhen()
             end
         end
 
-        wait_for_ticks(10 * 60) -- 10 minutes
+        wait_for_ticks(600) -- 10 minutes
     end
 end
 
