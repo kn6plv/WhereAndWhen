@@ -4,8 +4,8 @@ On AREDN nodes with USB, uses an attached GPS device (such as
 the VK-162 USB GPS Dongle) to update the time and location of the node
 every 10 minutes.
 
-On AREDN nodes without a local GPS device, looks for DtD connected nodes
-also running WhereAndWhen (with attached GPS) and syncs time and location from them.
+AREDN nodes without a local GPS device with automatically look for DtD connected nodes
+with WhereAndWhen (with attached GPS) installed and will sync time and location from them.
 This allows the use of a single GPS dongle per site with all nodes benefiting.
 
 Particularly handy for nodes being used at different locations in the field.
