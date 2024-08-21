@@ -11,7 +11,8 @@ This allows the use of a single GPS dongle per site with all nodes benefiting.
 Particularly handy for nodes being used at different locations in the field.
 
 ## Tested and working devices
+- VK-162 : https://www.amazon.com/dp/B01EROIUEW/
 
-https://www.amazon.com/dp/B01EROIUEW/
+- VK-172 : https://www.amazon.com/dp/B078Y597M6/
 
-https://www.amazon.com/dp/B078Y597M6/
+- GlobalSat BU-353N : https://www.amazon.com/GlobalSat-BU-353N-GNSS-Receiver-Black/dp/B0BLF7DSRY/
