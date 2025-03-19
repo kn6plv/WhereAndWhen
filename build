@@ -5,17 +5,26 @@ find . -name '*~' -delete
 
 ### Build AREDN package
 export COPYFILE_DISABLE=1
-export VERSION=0.1.1
+export VERSION=0.1.2
 
 # Main
 rm -rf data.tar.gz control.tar.gz
 cd src/data
-tar cf ../../data.tar `find . -type f | grep -v DS_Store | grep -v .pl | grep -v .pm`
+tar cfz ../../data.tar.gz `find . -type f | grep -v DS_Store | grep -v .pl | grep -v .pm`
+
 cd ../control
-sed -i "s/^Version: .*$/Version: ${VERSION}/" control
-tar cfz ../../control.tar.gz .
+sed -i "s/^Version: .*$/Version: ${VERSION}/" control-all
+sed -i "s/^Version: .*$/Version: ${VERSION}/" control-arm_cortex-a7_neon-vfpv4
+
+cp control-all control
+tar cfz ../../control.tar.gz control
 cd ../..
-gzip data.tar
 COPYFILE_DISABLE=1 tar cfz whereandwhen_${VERSION}_all.ipk control.tar.gz data.tar.gz debian-binary
 
-rm -rf data.tar.gz control.tar.gz *.deb
+cd src/control
+cp control-arm_cortex-a7_neon-vfpv4 control
+tar cfz ../../control.tar.gz control
+cd ../..
+COPYFILE_DISABLE=1 tar cfz whereandwhen_${VERSION}_arm_cortex-a7_neon-vfpv4.ipk control.tar.gz data.tar.gz debian-binary
+
+rm -rf data.tar.gz control.tar.gz *.deb src/control/control

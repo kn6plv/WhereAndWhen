@@ -1,0 +1,10 @@
+Package: whereandwhen
+Version: 0.1.2
+Depends: gpsd, kmod-usb-acm, kmod-usb-core, kmod-usb-ehci, kmod-usb-xhci-hcd, kmod-usb2, kmod-usb3, kmod-usb-serial-pl2303, kmod-usb-serial, kmod-usb-dwc2, kmod-usb-dwc3
+Provides:
+Source: package/whereandwhen
+Section: util
+Priority: optional
+Maintainer: Tim Wilkinson (KN6PLV)
+Architecture: all
+Description: Use GPS to set node location and time
